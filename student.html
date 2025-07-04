@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - International School</title>
+    <meta name="description" content="International School Dashboard: Manage marks, assignments, attendance, and more for students, teachers, and admins.">
+    <meta name="keywords" content="school, dashboard, student, teacher, admin, marks, attendance, assignments, education">
+    <meta property="og:title" content="International School Dashboard">
+    <meta property="og:description" content="A modern dashboard for students, teachers, and admins to manage marks, assignments, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/brightlogo.png">
+    <meta property="og:url" content="https://yourdomain.com/">
+    <link rel="preload" href="styles/main.css" as="style">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta name="theme-color" content="#205c3b">
+    <!-- iOS Splash Screens (example for iPhone X portrait) -->
+    <link rel="apple-touch-startup-image" href="assets/brightlogo.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Yjs and y-websocket -->
+    <script src="https://cdn.jsdelivr.net/npm/yjs@13.6.9/dist/yjs.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/y-websocket@1.5.10/dist/y-websocket.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div id="splashScreen" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:#f6f4ed;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div class="loader"></div>
+    </div>
+    <div class="dashboard-container">
+        <div class="utility-bar">
+            <button onclick="location.reload()" class="btn btn-secondary" title="Refresh" aria-label="Refresh Dashboard"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button onclick="toggleTheme()" class="btn btn-secondary" id="themeBtn2" title="Toggle Dark Mode" aria-label="Toggle Dark Mode"><i class="fas fa-moon"></i> Dark Mode</button>
+            <button onclick="logout()" class="btn btn-danger" title="Logout" aria-label="Logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <button onclick="openHelpModal()" class="btn btn-secondary" aria-label="Help & Support" title="Help & Support"><i class="fas fa-question-circle"></i></button>
+            <button onclick="showAllCards()" class="btn btn-secondary" aria-label="Show All Cards">Show All Cards</button>
+            <button onclick="openThemeModal()" class="btn btn-secondary" aria-label="Theme & Branding">Theme</button>
+            <button onclick="startTour()" class="btn btn-secondary" aria-label="Start Tour">Start Tour</button>
+            <span style="margin-left:16px;font-size:0.95em;">API Key: <span id="apiKeyDisplay"></span></span>
+            <button onclick="fetchMarksAPI()" class="btn btn-secondary" aria-label="Fetch Marks API">Fetch API Demo</button>
+        </div>
+        <nav class="navbar" aria-label="Main Navigation">
+            <div class="nav-brand">
+                <img class="site-logo" src="" alt="Site Logo" style="display:none;vertical-align:middle;">
+                <span>International School - Student Dashboard</span>
+            </div>
+            <div class="nav-links">
+                <a href="student.html" aria-label="Go to Dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="#assignments" aria-label="Go to Assignments"><i class="fas fa-tasks"></i> Assignments</a>
+                <a href="#messages" aria-label="Go to Messages"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="#attendance" aria-label="Go to Attendance"><i class="fas fa-calendar-check"></i> Attendance</a>
+                <a href="#" onclick="location.reload()" aria-label="Refresh Dashboard"><i class="fas fa-sync-alt"></i> Refresh</a>
+            </div>
+            <div class="nav-user">
+                <span id="studentName">Student</span>
+                <button onclick="toggleTheme()" class="theme-btn" id="themeBtn" aria-label="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button onclick="logout()" class="logout-btn" aria-label="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </nav>
+        <div class="content" id="main-content">
+            <!-- Language Selector -->
+            <div style="text-align:right;margin:1em 0;display:flex;align-items:center;justify-content:flex-end;gap:0.5em;">
+                <label for="langSelect" id="langLabel" style="margin:0;"><b>Language:</b></label>
+                <select id="langSelect" style="padding:0.2em 0.5em;border-radius:6px;min-width:90px;">
+                    <option value="en">English</option>
+                    <option value="am">Amharic</option>
+                </select>
+            </div>
+            <div class="cards-grid">
+                <div class="card" data-card="profile" draggable="true" ondragstart="onCardDragStart(event)" ondragover="onCardDragOver(event)" ondrop="onCardDrop(event)">
+                    <span class="drag-handle" aria-label="Drag to reorder">&#9776;</span>
+                    <button class="hide-card-btn" onclick="hideCard('profile')" aria-label="Hide card">&times;</button>
+                    <div class="card-header">
+                        <div class="card-icon primary"><i class="fas fa-user-graduate"></i></div>
+                        <div>
+                            <div class="card-title">My Profile</div>
+                            <img id="studentProfileImage" src="" alt="Profile Image" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:8px;display:none;">
+                            <div class="card-value" id="studentProfileName">Student</div>
+                            <div class="card-subtitle" id="studentProfileEmail"></div>
+                            <div class="card-subtitle" id="studentProfileGrade"></div>
+                            <button class="btn btn-secondary" style="margin-top:8px;" onclick="showEditProfileModal()"><i class="fas fa-edit"></i> Edit Profile</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" data-card="average" draggable="true" ondragstart="onCardDragStart(event)" ondragover="onCardDragOver(event)" ondrop="onCardDrop(event)">
+                    <span class="drag-handle" aria-label="Drag to reorder">&#9776;</span>
+                    <button class="hide-card-btn" onclick="hideCard('average')" aria-label="Hide card">&times;</button>
+                    <div class="card-header">
+                        <div class="card-icon danger"><i class="fas fa-chart-line"></i></div>
+                        <div>
+                            <div class="card-title">Average Grade</div>
+                            <div class="card-value" id="studentAverageGrade">0%</div>
+                            <div class="card-subtitle">This year</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" data-card="best" draggable="true" ondragstart="onCardDragStart(event)" ondragover="onCardDragOver(event)" ondrop="onCardDrop(event)">
+                    <span class="drag-handle" aria-label="Drag to reorder">&#9776;</span>
+                    <button class="hide-card-btn" onclick="hideCard('best')" aria-label="Hide card">&times;</button>
+                    <div class="card-header">
+                        <div class="card-icon warning"><i class="fas fa-trophy"></i></div>
+                        <div>
+                            <div class="card-title">Best Subject</div>
+                            <div class="card-value" id="studentBestSubject">-</div>
+                            <div class="card-subtitle">Highest mark</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-graduation-cap"></i> My Marks</h2>
+                    <button class="btn btn-secondary" onclick="downloadCSV()"><i class="fas fa-file-csv"></i> Download CSV</button>
+                    <button class="btn btn-primary" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Term</th>
+                                <th>Total</th>
+                                <th>Grade</th>
+                                <th>Teacher</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentMarksTable">
+                            <tr>
+                                <td colspan="5" class="text-center">No marks found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="section" style="margin-top:32px;">
+                    <div class="section-header">
+                        <h2><i class="fas fa-chart-bar"></i> Performance Chart</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="studentPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-bell"></i> Notifications</h2>
+                </div>
+                <div id="studentNotificationsList">
+                    <p class="text-center">No notifications yet.</p>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-envelope"></i> Messages <span id="studentMsgBadge" class="msg-badge" style="display:none;">0</span></h2>
+                </div>
+                <form id="studentMsgForm" style="margin-bottom:12px;">
+                    <div class="form-row">
+                        <input type="text" id="studentMsgTo" placeholder="To (admin, teacher username)" required style="flex:2;">
+                        <input type="text" id="studentMsgText" placeholder="Message" required style="flex:4;">
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </div>
+                </form>
+                <div id="studentMsgList" class="msg-list"></div>
+            </div>
+            <!-- Assignments Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-tasks"></i> Assignments</h2>
+                </div>
+                <div id="studentAssignmentList" class="assignment-list"></div>
+                <div id="studentAssignmentSubmission" style="display:none; margin-top:20px;"></div>
+            </div>
+            <!-- Calendar Section -->
+            <section>
+                <h2>Calendar</h2>
+                <div id="student-calendar" style="max-width:420px;margin:auto;"></div>
+            </section>
+            <!-- Gamification Section -->
+            <section>
+                <h2>My Achievements</h2>
+                <div id="student-gamification" style="max-width:420px;margin:auto;"></div>
+            </section>
+            <!-- Leaderboard Section -->
+            <section>
+                <h2>Leaderboard</h2>
+                <div id="student-leaderboard" style="max-width:420px;margin:auto;"></div>
+            </section>
+            <!-- Resources Section -->
+            <section>
+                <h2>Resources</h2>
+                <div id="resourceList"></div>
+            </section>
+            <!-- AI Insights Section -->
+            <section>
+                <h2><i class="fas fa-robot"></i> AI Insights</h2>
+                <div id="aiInsights" style="max-width:420px;margin:auto;"></div>
+            </section>
+            <!-- Ask AI Chat Widget -->
+            <section>
+                <h2><i class="fas fa-comments"></i> Ask AI</h2>
+                <div id="aiChat" style="max-width:420px;margin:auto;background:#f5f6fa;border-radius:8px;padding:1em 1em 0.5em 1em;box-shadow:0 1px 4px #e6e7fa;">
+                    <div id="aiChatHistory" style="min-height:80px;max-height:220px;overflow-y:auto;margin-bottom:0.7em;"></div>
+                    <form id="aiChatForm" style="display:flex;gap:0.5em;">
+                        <input type="text" id="aiChatInput" placeholder="Ask me anything about your performance..." style="flex:1;padding:0.5em;border-radius:6px;border:1px solid #ccc;">
+                        <button type="submit" class="btn btn-primary" style="padding:0.5em 1.2em;">Send</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+        <!-- Bottom Navigation (Mobile Only) -->
+        <nav class="bottom-nav">
+            <a href="student.html"><i class="fas fa-home"></i></a>
+            <a href="#assignments"><i class="fas fa-tasks"></i></a>
+            <a href="#messages"><i class="fas fa-envelope"></i></a>
+            <a href="#attendance"><i class="fas fa-calendar-check"></i></a>
+            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i></a>
+        </nav>
+    </div>
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                <span class="close" onclick="closeModal('editProfileModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label for="editProfileName">Full Name</label>
+                        <input type="text" id="editProfileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProfileEmail">Email</label>
+                        <input type="email" id="editProfileEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProfileGrade">Grade</label>
+                        <input type="text" id="editProfileGrade" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Two-Factor Authentication (2FA)</label>
+                        <div style="display:flex;align-items:center;gap:0.7em;">
+                            <input type="checkbox" id="enable2FA">
+                            <span id="2faStatus" style="font-size:0.95em;color:#666;"></span>
+                        </div>
+                        <div id="2faSetup" style="display:none;margin-top:0.5em;background:#f5f6fa;padding:0.7em 1em;border-radius:8px;">
+                            <div><b>Setup Code:</b> <span id="2faCode" style="font-family:monospace;font-size:1.1em;"></span></div>
+                            <div style="font-size:0.95em;color:#888;">Enter this code when logging in.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('editProfileModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveProfile()" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal for Badge Details -->
+    <div id="badgeModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:10000;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:320px;text-align:center;position:relative;">
+            <button onclick="document.getElementById('badgeModal').style.display='none'" style="position:absolute;top:0.5em;right:0.7em;background:none;border:none;font-size:1.3em;">&times;</button>
+            <div id="badgeModalContent"></div>
+        </div>
+    </div>
+    <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+    <div id="helpModal" class="modal hidden" aria-modal="true" role="dialog" tabindex="-1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Help & Support</h3>
+                <span class="close" onclick="closeHelpModal()" aria-label="Close Help">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4>Frequently Asked Questions</h4>
+                <ul>
+                    <li><b>How do I change my password?</b> Use the Edit Profile button in your profile card.</li>
+                    <li><b>How do I contact my teacher?</b> Use the Messages section to send a message.</li>
+                    <li><b>How do I enable dark mode?</b> Click the Dark Mode button in the top bar.</li>
+                </ul>
+                <h4>Contact Support</h4>
+                <p>Email: <a href="mailto:support@internationalschool.com">support@internationalschool.com</a></p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeHelpModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+    <!-- Add theme modal before </body> -->
+    <div id="themeModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Theme & Branding</h3>
+                <span class="close" onclick="closeThemeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <label>Primary Color: <input type="color" id="primaryColorPicker"></label>
+                <label>Logo: <input type="file" id="logoUpload" accept="image/*"></label>
+                <img id="customLogoPreview" style="max-width:100px;display:none;">
+            </div>
+            <div class="modal-footer">
+                <button onclick="saveThemeSettings()" class="btn btn-primary">Save</button>
+                <button onclick="closeThemeModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+    const marks = JSON.parse(localStorage.getItem('marks')) || [];
+    const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
+    const assignments = JSON.parse(localStorage.getItem('assignments')) || [];
+    const submissions = JSON.parse(localStorage.getItem('submissions')) || [];
+    // Only call shared renderers from main.js on DOMContentLoaded
+    // Calendar events (keep sample or replace with real data as needed)
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        // Calendar (keep as is or update to use real events)
+        const studentEvents = [
+            { date: '2024-06-10', title: 'Math Assignment Due', description: 'Algebra worksheet' },
+            { date: '2024-06-12', title: 'Present', description: 'Attendance marked present' },
+            { date: '2024-06-13', title: 'Absent', description: 'Attendance marked absent' },
+            { date: '2024-06-15', title: 'Science Project Due', description: 'Volcano model' },
+        ];
+        window.initCalendar('#student-calendar', studentEvents);
+        // Leaderboard, achievements, and resources
+        window.renderResourceList(currentUser, false, true);
+        // If you have window.renderStudentGamification or window.renderStudentLeaderboard, call them here
+        // window.renderStudentGamification(currentUser);
+        // window.renderStudentLeaderboard(currentUser);
+        // AI Insights logic
+        const aiDiv = document.getElementById('aiInsights');
+        if (aiDiv && currentUser && currentUser.role === 'student') {
+            // Gather data
+            const myMarks = marks.filter(m => m.studentId === currentUser.username);
+            const myAttendance = attendance.filter(a => a.studentId === currentUser.username);
+            const myAssignments = assignments.length;
+            const mySubmissions = submissions.filter(s => s.studentId === currentUser.username);
+            // Insights
+            let insights = [];
+            // Performance trend
+            if (myMarks.length) {
+                const avg = myMarks.reduce((a, b) => a + (b.total || 0), 0) / myMarks.length;
+                if (avg >= 90) insights.push({ icon: '🌟', text: 'Excellent overall performance! Keep it up.' });
+                else if (avg >= 75) insights.push({ icon: '👍', text: 'Good performance, but you can aim higher.' });
+                else insights.push({ icon: '📈', text: 'Your average is below 75%. Focus on your studies for improvement.' });
+                // Best/worst subject
+                const bySubject = {};
+                myMarks.forEach(m => {
+                    if (!bySubject[m.subject]) bySubject[m.subject] = [];
+                    bySubject[m.subject].push(m.total);
+                });
+                let best = '', worst = '', bestAvg = -1, worstAvg = 101;
+                for (const s in bySubject) {
+                    const avgS = bySubject[s].reduce((a, b) => a + b, 0) / bySubject[s].length;
+                    if (avgS > bestAvg) { bestAvg = avgS; best = s; }
+                    if (avgS < worstAvg) { worstAvg = avgS; worst = s; }
+                }
+                if (best) insights.push({ icon: '🏅', text: `Your best subject is <b>${best}</b> (${bestAvg.toFixed(1)}%).` });
+                if (worst && worst !== best) insights.push({ icon: '🔍', text: `You can improve in <b>${worst}</b> (${worstAvg.toFixed(1)}%).` });
+            } else {
+                insights.push({ icon: 'ℹ️', text: 'No marks data yet. Complete assignments and exams to see insights.' });
+            }
+            // Attendance
+            if (myAttendance.length) {
+                const present = myAttendance.filter(a => a.status === 'Present').length;
+                const percent = (present / myAttendance.length) * 100;
+                if (percent >= 95) insights.push({ icon: '✅', text: 'Excellent attendance! Keep it up.' });
+                else if (percent >= 80) insights.push({ icon: '🕒', text: 'Good attendance, but try to attend every class.' });
+                else insights.push({ icon: '⚠️', text: 'Your attendance is low. Try to attend more classes.' });
+            }
+            // Assignment completion
+            if (myAssignments) {
+                if (mySubmissions.length === myAssignments) insights.push({ icon: '📚', text: 'You have submitted all assignments. Great job!' });
+                else if (mySubmissions.length > 0) insights.push({ icon: '✏️', text: `You have submitted ${mySubmissions.length} of ${myAssignments} assignments. Try to complete them all!` });
+                else insights.push({ icon: '📝', text: 'You have not submitted any assignments yet. Start submitting to earn badges!' });
+            }
+            // Render
+            aiDiv.innerHTML = insights.map(i => `<div style='display:flex;align-items:center;gap:0.7em;background:#f5f6fa;border-radius:8px;padding:0.7em 1em;margin-bottom:0.5em;'><span style='font-size:1.5em;'>${i.icon}</span><span style='font-size:1em;'>${i.text}</span></div>`).join('');
+        }
+    });
+    // 2FA logic for Edit Profile Modal
+    function generate2FACode() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+    function update2FAUI() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const enable2FA = document.getElementById('enable2FA');
+        const status = document.getElementById('2faStatus');
+        const setup = document.getElementById('2faSetup');
+        const codeSpan = document.getElementById('2faCode');
+        let user2FA = JSON.parse(localStorage.getItem('2fa_' + currentUser.username) || '{}');
+        enable2FA.checked = !!user2FA.enabled;
+        status.textContent = user2FA.enabled ? 'Enabled' : 'Disabled';
+        if (user2FA.enabled) {
+            setup.style.display = 'block';
+            codeSpan.textContent = user2FA.code || '';
+        } else {
+            setup.style.display = 'none';
+            codeSpan.textContent = '';
+        }
+    }
+    document.getElementById('editProfileModal').addEventListener('show', update2FAUI);
+    document.getElementById('enable2FA').onchange = function() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        let user2FA = JSON.parse(localStorage.getItem('2fa_' + currentUser.username) || '{}');
+        if (this.checked) {
+            user2FA = { enabled: true, code: generate2FACode() };
+        } else {
+            user2FA = { enabled: false };
+        }
+        localStorage.setItem('2fa_' + currentUser.username, JSON.stringify(user2FA));
+        update2FAUI();
+    };
+    // Show modal event polyfill
+    (function() {
+        const modal = document.getElementById('editProfileModal');
+        if (!modal) return;
+        if (!modal._showEventPatched) {
+            modal._showEventPatched = true;
+            const origShow = modal.classList.remove;
+            modal.classList.remove = function(...args) {
+                const wasHidden = modal.classList.contains('hidden');
+                origShow.apply(this, args);
+                if (wasHidden && !modal.classList.contains('hidden')) {
+                    const event = new Event('show');
+                    modal.dispatchEvent(event);
+                }
+            };
+        }
+    })();
+    // Ask AI Chat Widget logic
+    function aiAnswer(question, user, marks, attendance, assignments, submissions) {
+        question = question.toLowerCase();
+        // Grades
+        if (question.includes('average') && question.includes('grade')) {
+            if (!marks.length) return "You don't have any marks yet.";
+            const avg = marks.reduce((a, b) => a + (b.total || 0), 0) / marks.length;
+            return `Your average grade is <b>${avg.toFixed(1)}%</b>.`;
+        }
+        if (question.includes('best subject')) {
+            if (!marks.length) return "No marks yet to determine your best subject.";
+            const bySubject = {};
+            marks.forEach(m => {
+                if (!bySubject[m.subject]) bySubject[m.subject] = [];
+                bySubject[m.subject].push(m.total);
+            });
+            let best = '', bestAvg = -1;
+            for (const s in bySubject) {
+                const avgS = bySubject[s].reduce((a, b) => a + b, 0) / bySubject[s].length;
+                if (avgS > bestAvg) { bestAvg = avgS; best = s; }
+            }
+            return `Your best subject is <b>${best}</b> (${bestAvg.toFixed(1)}%).`;
+        }
+        if (question.includes('worst subject') || question.includes('improve')) {
+            if (!marks.length) return "No marks yet to determine your weakest subject.";
+            const bySubject = {};
+            marks.forEach(m => {
+                if (!bySubject[m.subject]) bySubject[m.subject] = [];
+                bySubject[m.subject].push(m.total);
+            });
+            let worst = '', worstAvg = 101;
+            for (const s in bySubject) {
+                const avgS = bySubject[s].reduce((a, b) => a + b, 0) / bySubject[s].length;
+                if (avgS < worstAvg) { worstAvg = avgS; worst = s; }
+            }
+            return `You can improve in <b>${worst}</b> (${worstAvg.toFixed(1)}%). Try reviewing your notes and asking your teacher for help!`;
+        }
+        // Attendance
+        if (question.includes('attendance')) {
+            if (!attendance.length) return "No attendance records yet.";
+            const present = attendance.filter(a => a.status === 'Present').length;
+            const percent = (present / attendance.length) * 100;
+            return `Your attendance rate is <b>${percent.toFixed(1)}%</b>.` + (percent >= 95 ? " Excellent!" : percent >= 80 ? " Good, but try to attend every class." : " You should try to attend more classes.");
+        }
+        // Assignments
+        if (question.includes('assignment')) {
+            if (!assignments.length) return "No assignments have been created yet.";
+            const submitted = submissions.length;
+            if (submitted === assignments.length) return "You have submitted all assignments. Great job!";
+            if (submitted > 0) return `You have submitted <b>${submitted}</b> of <b>${assignments.length}</b> assignments. Try to complete them all!`;
+            return "You have not submitted any assignments yet. Start submitting to earn badges!";
+        }
+        // General study tips
+        if (question.includes('study tip') || question.includes('how to study')) {
+            return "Break your study sessions into short, focused intervals. Review your notes regularly, ask questions in class, and don't hesitate to seek help from teachers or classmates.";
+        }
+        // Fallback
+        return "I'm here to help! You can ask about your average grade, best/worst subject, attendance, assignments, or for study tips.";
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatForm = document.getElementById('aiChatForm');
+        const chatInput = document.getElementById('aiChatInput');
+        const chatHistory = document.getElementById('aiChatHistory');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const marks = JSON.parse(localStorage.getItem('marks')) || [];
+        const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
+        const assignments = JSON.parse(localStorage.getItem('assignments')) || [];
+        const submissions = JSON.parse(localStorage.getItem('submissions')) || [];
+        if (chatForm) {
+            chatForm.onsubmit = function(e) {
+                e.preventDefault();
+                const q = chatInput.value.trim();
+                if (!q) return;
+                chatHistory.innerHTML += `<div style='margin-bottom:0.3em;'><b>You:</b> ${q}</div>`;
+                const answer = aiAnswer(q, currentUser, marks.filter(m => m.studentId === currentUser.username), attendance.filter(a => a.studentId === currentUser.username), assignments, submissions.filter(s => s.studentId === currentUser.username));
+                setTimeout(() => {
+                    chatHistory.innerHTML += `<div style='margin-bottom:0.7em;'><b>AI:</b> ${answer}</div>`;
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                }, 300);
+                chatInput.value = '';
+            };
+        }
+    });
+    </script>
+    <style>
+    .compact-topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 48px;
+        background: var(--primary-gradient, linear-gradient(90deg, #4e54c8, #8f94fb));
+        display: flex;
+        align-items: center;
+        z-index: 1001;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .hamburger {
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+        margin-left: 8px;
+    }
+    .hamburger span {
+        display: block;
+        width: 26px;
+        height: 3px;
+        background: #fff;
+        margin: 4px 0;
+        border-radius: 2px;
+        transition: 0.3s;
+    }
+    .topbar-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1em;
+        margin-left: 12px;
+    }
+    .side-menu {
+        position: fixed;
+        top: 0;
+        left: -220px;
+        width: 200px;
+        height: 100vh;
+        background: #fff;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        padding-top: 60px;
+        transition: left 0.25s;
+        z-index: 1200;
+    }
+    .side-menu.open {
+        left: 0;
+    }
+    .side-menu a {
+        padding: 1em 1.5em;
+        color: #333;
+        text-decoration: none;
+        font-weight: 500;
+        border-bottom: 1px solid #eee;
+        transition: background 0.2s;
+    }
+    .side-menu a:hover {
+        background: #f0f4ff;
+    }
+    .dashboard-container, .content {
+        margin-top: 52px !important;
+    }
+    .compact-menu, .navbar { display: none !important; }
+    </style>
+</body>
+</html> 

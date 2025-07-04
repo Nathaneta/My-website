@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - International School</title>
+    <meta name="description" content="International School Dashboard: Manage marks, assignments, attendance, and more for students, teachers, and admins.">
+    <meta name="keywords" content="school, dashboard, student, teacher, admin, marks, attendance, assignments, education">
+    <meta property="og:title" content="International School Dashboard">
+    <meta property="og:description" content="A modern dashboard for students, teachers, and admins to manage marks, assignments, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/brightlogo.png">
+    <meta property="og:url" content="https://yourdomain.com/">
+    <link rel="preload" href="styles/main.css" as="style">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="theme-color" content="#205c3b">
+    <!-- iOS Splash Screens (example for iPhone X portrait) -->
+    <link rel="apple-touch-startup-image" href="assets/brightlogo.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Yjs and y-websocket -->
+    <script src="https://cdn.jsdelivr.net/npm/yjs@13.6.9/dist/yjs.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/y-websocket@1.5.10/dist/y-websocket.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="splashScreen" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:#f6f4ed;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div class="loader"></div>
+    </div>
+    <div class="dashboard-container">
+        <nav class="navbar" aria-label="Main Navigation">
+            <div class="nav-brand">
+                <img class="site-logo" src="" alt="Site Logo" style="display:none;vertical-align:middle;">
+                <i class="fas fa-graduation-cap"></i>
+                <span>International School - Teacher Dashboard</span>
+            </div>
+            <div class="nav-links">
+                <a href="teacher.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="#assignments"><i class="fas fa-tasks"></i> Assignments</a>
+                <a href="#messages"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="#attendance"><i class="fas fa-calendar-check"></i> Attendance</a>
+            </div>
+            <div class="nav-user">
+                <span id="teacherName">Teacher</span>
+            </div>
+        </nav>
+        <div class="content">
+            <!-- Language Selector -->
+            <div style="text-align:right;margin:1em 0;display:flex;align-items:center;justify-content:flex-end;gap:0.5em;">
+                <label for="langSelect" id="langLabel" style="margin:0;"><b>Language:</b></label>
+                <select id="langSelect" style="padding:0.2em 0.5em;border-radius:6px;min-width:90px;">
+                    <option value="en">English</option>
+                    <option value="am">Amharic</option>
+                </select>
+            </div>
+            <div class="cards-grid">
+                <div class="card" data-card="subjects-marks">
+                    <button class="hide-card-btn" onclick="hideCard('subjects-marks')" aria-label="Hide card">&times;</button>
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-book"></i> My Subjects & Marks</h2>
+                            <button onclick="showAddMarkModal()" class="btn btn-primary" style="float:right;">Add Mark</button>
+                        </div>
+                        <div class="bulk-actions-toolbar" id="bulkActionsToolbar" style="display:none; margin-bottom:10px;">
+                            <button class="btn btn-danger" onclick="bulkDeleteMarks()"><i class="fas fa-trash"></i> Bulk Delete</button>
+                            <button class="btn btn-secondary" onclick="showBulkEditModal()"><i class="fas fa-edit"></i> Bulk Edit</button>
+                            <button class="btn btn-secondary" onclick="bulkExportMarks()"><i class="fas fa-file-export"></i> Export</button>
+                        </div>
+                        <div class="filters" style="margin-bottom:10px;">
+                            <input type="text" id="markSearch" placeholder="Search marks..." onkeyup="filterTeacherMarks()" style="margin-right:10px;">
+                            <select id="filterSubject" onchange="filterTeacherMarks()"><option value="">All Subjects</option></select>
+                            <select id="filterStudent" onchange="filterTeacherMarks()"><option value="">All Students</option></select>
+                            <select id="filterTerm" onchange="filterTeacherMarks()"><option value="">All Terms</option></select>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAllMarks" onclick="toggleSelectAllMarks()"></th>
+                                        <th>Student</th>
+                                        <th>Subject</th>
+                                        <th>Term</th>
+                                        <th>Total</th>
+                                        <th>Grade</th>
+                                        <th>Comment</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teacherMarksTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center">No marks found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" data-card="notifications">
+                    <button class="hide-card-btn" onclick="hideCard('notifications')" aria-label="Hide card">&times;</button>
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-bell"></i> Notifications</h2>
+                        </div>
+                        <div id="teacherNotifications">
+                            <p class="text-center">No notifications yet.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" data-card="stats">
+                    <button class="hide-card-btn" onclick="hideCard('stats')" aria-label="Hide card">&times;</button>
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-chart-bar"></i> Stats</h2>
+                        </div>
+                        <div id="teacherStats">
+                            <p class="text-center">Stats coming soon.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" data-card="send-notification">
+                    <button class="hide-card-btn" onclick="hideCard('send-notification')" aria-label="Hide card">&times;</button>
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-bell"></i> Send Notification</h2>
+                        </div>
+                        <form id="teacherNotificationForm">
+                            <div class="form-group">
+                                <label for="teacherNotificationTo">To (username or 'all')</label>
+                                <input type="text" id="teacherNotificationTo" required placeholder="e.g. fraol.t or all">
+                            </div>
+                            <div class="form-group">
+                                <label for="teacherNotificationMessage">Message</label>
+                                <textarea id="teacherNotificationMessage" rows="2" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Notification</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card" data-card="messages">
+                    <button class="hide-card-btn" onclick="hideCard('messages')" aria-label="Hide card">&times;</button>
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-envelope"></i> Messages <span id="teacherMsgBadge" class="msg-badge" style="display:none;">0</span></h2>
+                        </div>
+                        <form id="teacherMsgForm" style="margin-bottom:12px;">
+                            <div class="form-row">
+                                <input type="text" id="teacherMsgTo" placeholder="To (admin, student username)" required style="flex:2;">
+                                <input type="text" id="teacherMsgText" placeholder="Message" required style="flex:4;">
+                                <button type="submit" class="btn btn-primary">Send</button>
+                            </div>
+                        </form>
+                        <div id="teacherMsgList" class="msg-list"></div>
+                    </div>
+                </div>
+                <div class="card" data-card="attendance">
+                    <button class="hide-card-btn" onclick="hideCard('attendance')" aria-label="Hide card">&times;</button>
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-calendar-check"></i> Attendance</h2>
+                        </div>
+                        <form id="attendanceForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="attendanceDate">Date</label>
+                                    <input type="date" id="attendanceDate" required value="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="attendanceSubject">Subject</label>
+                                    <select id="attendanceSubject" required></select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Mark Attendance</label>
+                                <div id="attendanceStudentList">
+                                    <!-- Student checkboxes will be loaded here -->
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Attendance</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card" data-card="assignments">
+                    <button class="hide-card-btn" onclick="hideCard('assignments')" aria-label="Hide card">&times;</button>
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-tasks"></i> Assignments</h2>
+                        </div>
+                        <form id="assignmentForm" style="margin-bottom:16px;">
+                            <div class="form-row">
+                                <input type="text" id="assignmentTitle" placeholder="Title" required style="flex:2;">
+                                <input type="text" id="assignmentDescription" placeholder="Description" required style="flex:4;">
+                                <input type="date" id="assignmentDueDate" required style="flex:1;">
+                                <select id="assignmentSubject" required style="flex:1;"></select>
+                                <button type="submit" class="btn btn-primary">Create</button>
+                            </div>
+                        </form>
+                        <div id="assignmentList" class="assignment-list"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Calendar Section -->
+            <section>
+                <h2>Calendar</h2>
+                <div id="teacher-calendar" style="max-width:420px;margin:auto;"></div>
+            </section>
+            <!-- Achievements Section -->
+            <section>
+                <h2>My Achievements</h2>
+                <div id="teacher-gamification" style="max-width:420px;margin:auto;"></div>
+            </section>
+            <!-- Resources Section -->
+            <section>
+                <h2>Resources</h2>
+                <form id="resourceUploadForm" style="display:flex;flex-wrap:wrap;gap:0.5em;align-items:center;margin-bottom:1em;">
+                    <input type="text" id="resourceTitle" placeholder="Title" required style="flex:2;min-width:120px;padding:0.4em;">
+                    <select id="resourceSubject" required style="flex:1;min-width:90px;padding:0.4em;">
+                        <option value="">Subject</option>
+                    </select>
+                    <input type="file" id="resourceFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.zip,.rar" required style="flex:2;min-width:120px;">
+                    <button type="submit" class="btn btn-primary" style="padding:0.4em 1.2em;">Upload</button>
+                </form>
+                <div id="resourceList"></div>
+            </section>
+            <!-- AI Insights Section -->
+            <section>
+                <h2><i class="fas fa-robot"></i> AI Insights</h2>
+                <div id="aiInsights" style="max-width:420px;margin:auto;"></div>
+            </section>
+        </div>
+    </div>
+    <!-- Add Mark Modal -->
+    <div id="addMarkModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Add New Mark</h3>
+                <span class="close" onclick="closeModal('addMarkModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addMarkForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addStudent">Student</label>
+                            <select id="addStudent" required>
+                                <option value="">Select Student</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="addSubject">Subject</label>
+                            <select id="addSubject" required>
+                                <option value="">Select Subject</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="addTerm">Term</label>
+                            <select id="addTerm" required>
+                                <option value="">Select Term</option>
+                                <option value="1">Term 1</option>
+                                <option value="2">Term 2</option>
+                                <option value="3">Term 3</option>
+                                <option value="4">Term 4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addActivity">Activity (Max: 5 marks)</label>
+                            <input type="number" id="addActivity" min="0" max="5" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="addExerciseBook">Exercise Book (Max: 5 marks)</label>
+                            <input type="number" id="addExerciseBook" min="0" max="5" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addMidExam">Mid Exam (Max: 25 marks)</label>
+                            <input type="number" id="addMidExam" min="0" max="25" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="addFinalExam">Final Exam (Max: 50 marks)</label>
+                            <input type="number" id="addFinalExam" min="0" max="50" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addGroupWork">Group Work (Max: 10 marks)</label>
+                            <input type="number" id="addGroupWork" min="0" max="10" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="addWorksheet">Worksheet (Max: 5 marks)</label>
+                            <input type="number" id="addWorksheet" min="0" max="5" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Total: <span id="totalPreview">0</span></label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('addMarkModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveMark()" class="btn btn-primary">Save Mark</button>
+            </div>
+        </div>
+    </div>
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                <span class="close" onclick="closeModal('editProfileModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label for="editProfileName">Full Name</label>
+                        <input type="text" id="editProfileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProfileEmail">Email</label>
+                        <input type="email" id="editProfileEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProfileSubjects">Subjects</label>
+                        <input type="text" id="editProfileSubjects" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Two-Factor Authentication (2FA)</label>
+                        <div style="display:flex;align-items:center;gap:0.7em;">
+                            <input type="checkbox" id="enable2FA">
+                            <span id="2faStatus" style="font-size:0.95em;color:#666;"></span>
+                        </div>
+                        <div id="2faSetup" style="display:none;margin-top:0.5em;background:#f5f6fa;padding:0.7em 1em;border-radius:8px;">
+                            <div><b>Setup Code:</b> <span id="2faCode" style="font-family:monospace;font-size:1.1em;"></span></div>
+                            <div style="font-size:0.95em;color:#888;">Enter this code when logging in.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('editProfileModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveProfile()" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal for Badge Details -->
+    <div id="badgeModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:10000;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:320px;text-align:center;position:relative;">
+            <button onclick="document.getElementById('badgeModal').style.display='none'" style="position:absolute;top:0.5em;right:0.7em;background:none;border:none;font-size:1.3em;">&times;</button>
+            <div id="badgeModalContent"></div>
+        </div>
+    </div>
+    <div class="utility-bar">
+        <button onclick="location.reload()" class="btn btn-secondary" title="Refresh" aria-label="Refresh Dashboard"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <button onclick="toggleTheme()" class="btn btn-secondary" id="themeBtn2" title="Toggle Dark Mode" aria-label="Toggle Dark Mode"><i class="fas fa-moon"></i> Dark Mode</button>
+        <button onclick="logout()" class="btn btn-danger" title="Logout" aria-label="Logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <button onclick="openHelpModal()" class="btn btn-secondary" aria-label="Help & Support" title="Help & Support"><i class="fas fa-question-circle"></i></button>
+        <button onclick="showAllCards()" class="btn btn-secondary" aria-label="Show All Cards">Show All Cards</button>
+        <button onclick="openThemeModal()" class="btn btn-secondary" aria-label="Theme & Branding">Theme</button>
+        <button onclick="startTour()" class="btn btn-secondary" aria-label="Start Tour">Start Tour</button>
+        <span style="margin-left:16px;font-size:0.95em;">API Key: <span id="apiKeyDisplay"></span></span>
+        <button onclick="fetchMarksAPI()" class="btn btn-secondary" aria-label="Fetch Marks API">Fetch API Demo</button>
+    </div>
+    <div id="helpModal" class="modal hidden" aria-modal="true" role="dialog" tabindex="-1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Help & Support</h3>
+                <span class="close" onclick="closeHelpModal()" aria-label="Close Help">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4>Frequently Asked Questions</h4>
+                <ul>
+                    <li><b>How do I add or edit marks?</b> Use the Add Mark button or the table actions in your dashboard.</li>
+                    <li><b>How do I contact a student or admin?</b> Use the Messages section to send a message.</li>
+                    <li><b>How do I enable dark mode?</b> Click the Dark Mode button in the top bar.</li>
+                </ul>
+                <h4>Contact Support</h4>
+                <p>Email: <a href="mailto:support@internationalschool.com">support@internationalschool.com</a></p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeHelpModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+    <div id="themeModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Theme & Branding</h3>
+                <span class="close" onclick="closeThemeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <label>Primary Color: <input type="color" id="primaryColorPicker"></label>
+                <label>Logo: <input type="file" id="logoUpload" accept="image/*"></label>
+                <img id="customLogoPreview" style="max-width:100px;display:none;">
+            </div>
+            <div class="modal-footer">
+                <button onclick="saveThemeSettings()" class="btn btn-primary">Save</button>
+                <button onclick="closeThemeModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+    // Remove toggleHamburgerMenu and related event listeners
+    // ... existing code ...
+    </script>
+
+</body>
+</html> 

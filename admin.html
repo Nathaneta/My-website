@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - International School</title>
+    <meta name="description" content="International School Dashboard: Manage marks, assignments, attendance, and more for students, teachers, and admins.">
+    <meta name="keywords" content="school, dashboard, student, teacher, admin, marks, attendance, assignments, education">
+    <meta property="og:title" content="International School Dashboard">
+    <meta property="og:description" content="A modern dashboard for students, teachers, and admins to manage marks, assignments, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/brightlogo.png">
+    <meta property="og:url" content="https://yourdomain.com/">
+    <link rel="preload" href="styles/main.css" as="style">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="icon" type="image/png" href="assets/brightlogo.png">
+    <meta name="theme-color" content="#205c3b">
+    <!-- iOS Splash Screens (example for iPhone X portrait) -->
+    <link rel="apple-touch-startup-image" href="assets/brightlogo.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Yjs and y-websocket -->
+    <script src="https://cdn.jsdelivr.net/npm/yjs@13.6.9/dist/yjs.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/y-websocket@1.5.10/dist/y-websocket.js"></script>
+</head>
+<body>
+    <div id="splashScreen" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:#f6f4ed;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div class="loader"></div>
+    </div>
+    <nav class="navbar" aria-label="Main Navigation">
+        <div class="nav-brand">
+            <img class="site-logo" src="" alt="Site Logo" style="display:none;vertical-align:middle;">
+            <span>International School - Admin Dashboard</span>
+        </div>
+        <div class="nav-links">
+            <a href="admin.html"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="#" onclick="showSystemStats()"><i class="fas fa-chart-bar"></i> Analytics</a>
+            <a href="#" onclick="showUserManagement()"><i class="fas fa-users-cog"></i> Users</a>
+            <a href="#" onclick="showAddMark()"><i class="fas fa-edit"></i> Marks</a>
+            <a href="#" onclick="showBulkImport()"><i class="fas fa-file-import"></i> Import/Export</a>
+        </div>
+        <div class="nav-user">
+            <span id="adminName">Admin</span>
+            <button class="btn btn-secondary" style="margin-left:10px;" onclick="document.getElementById('editProfileModal').classList.remove('hidden')">
+                <i class="fas fa-user-edit"></i> Edit Profile
+            </button>
+        </div>
+    </nav>
+    <div class="dashboard-container">
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Overview Cards -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-bar"></i> System Overview</h2>
+                    <div class="header-actions">
+                        <button onclick="refreshData()" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"> </i>  Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="cards-grid">
+                    <div class="card" data-card="overview">
+                        <button class="hide-card-btn" onclick="hideCard('overview')" aria-label="Hide card">&times;</button>
+                        <div class="card-header">
+                            <div class="card-icon primary">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div>
+                                <div class="card-title">Total Students</div>
+                                <div class="card-value" id="totalStudents">0</div>
+                                <div class="card-subtitle">Registered students</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" data-card="overview">
+                        <button class="hide-card-btn" onclick="hideCard('overview')" aria-label="Hide card">&times;</button>
+                        <div class="card-header">
+                            <div class="card-icon secondary">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div>
+                                <div class="card-title">Total Teachers</div>
+                                <div class="card-value" id="totalTeachers">0</div>
+                                <div class="card-subtitle">Active teachers</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" data-card="overview">
+                        <button class="hide-card-btn" onclick="hideCard('overview')" aria-label="Hide card">&times;</button>
+                        <div class="card-header">
+                            <div class="card-icon warning">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div>
+                                <div class="card-title">Total Subjects</div>
+                                <div class="card-value" id="totalSubjects">7</div>
+                                <div class="card-subtitle">Available subjects</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" data-card="overview">
+                        <button class="hide-card-btn" onclick="hideCard('overview')" aria-label="Hide card">&times;</button>
+                        <div class="card-header">
+                            <div class="card-icon danger">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="card-title">Average Grade</div>
+                                <div class="card-value" id="averageGrade">0%</div>
+                                <div class="card-subtitle">Overall performance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="dashboard-layout">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Mark Management -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-edit"></i> Mark Management</h2>
+                            <div class="section-actions">
+                                <button onclick="exportMarks()" class="btn btn-secondary">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button onclick="generateReport()" class="btn btn-primary">
+                                    <i class="fas fa-file-pdf"></i> Generate Report
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="filters">
+                            <select id="filterSubject" onchange="filterMarks()">
+                                <option value="">All Subjects</option>
+                                <option value="Maths">Maths</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Agriculture">Agriculture</option>
+                                <option value="English">English</option>
+                                <option value="Physics">Physics</option>
+                                <option value="ICT">ICT</option>
+                            </select>
+                            
+                            <select id="filterStudent" onchange="filterMarks()">
+                                <option value="">All Students</option>
+                            </select>
+                            
+                            <input type="text" id="searchMarks" placeholder="Search marks..." onkeyup="searchMarks()">
+                        </div>
+                        
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Subject</th>
+                                        <th>Term</th>
+                                        <th>Total</th>
+                                        <th>Grade</th>
+                                        <th>Teacher</th>
+                                        <th>Comment</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="marksTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center">No marks found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-trophy"></i> Top Performers</h2>
+                        </div>
+                        <div id="leaderboard">
+                            <!-- Leaderboard will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Performance Chart -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-chart-bar"></i> Performance Overview</h2>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Persistent First Notification -->
+                    <div id="firstNotification" class="section" style="margin-top: 12px;"></div>
+
+
+                    <!-- Quick Actions -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                        </div>
+                        <div class="quick-actions">
+                            <button onclick="showAddMark()" class="action-btn">
+                                <i class="fas fa-plus fa-2x"></i><br>Add Mark
+                            </button>
+                            <button onclick="showUserManagement()" class="action-btn">
+                                <i class="fas fa-users-cog fa-2x"></i><br>User Management
+                            </button>
+                            <button onclick="showAddStudent()" class="action-btn">
+                                <i class="fas fa-user-graduate fa-2x"></i><br>Add Student
+                            </button>
+                            <button onclick="showAddTeacher()" class="action-btn">
+                                <i class="fas fa-chalkboard-teacher fa-2x"></i><br>Add Teacher
+                            </button>
+                            <button onclick="showAllUsers()" class="action-btn">
+                                <i class="fas fa-list fa-2x"></i><br>View All Users
+                            </button>
+                            <button onclick="showBulkImport()" class="action-btn">
+                                <i class="fas fa-file-import fa-2x"></i><br>Bulk Import
+                            </button>
+                            <button onclick="showSystemStats()" class="action-btn">
+                                <i class="fas fa-chart-pie fa-2x"></i><br>System Stats
+                            </button>
+                            <button onclick="showStudentImage()" class="action-btn">
+                                <i class="fas fa-user-circle fa-2x"></i><br>Student Images
+                            </button>
+                            <button onclick="showDeadlineManagement()" class="action-btn">
+                                <i class="fas fa-clock fa-2x"></i><br>Deadlines
+                            </button>
+                            <button onclick="resetDemoData()" class="action-btn">
+                                <i class="fas fa-redo fa-2x"></i><br>Reset Demo Data
+                            </button>
+                            <button onclick="loadDemoData()" class="action-btn">
+                                <i class="fas fa-download fa-2x"></i><br>Load Demo Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Send Notification -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-bell"></i> Send Notification</h2>
+                        </div>
+                        <form id="adminNotificationForm">
+                            <div class="form-group">
+                                <label for="notificationTo">To (username or 'all')</label>
+                                <input type="text" id="notificationTo" required placeholder="e.g. fraol.t or all">
+                            </div>
+                            <div class="form-group">
+                                <label for="notificationMessage">Message</label>
+                                <textarea id="notificationMessage" rows="2" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Notification</button>
+                        </form>
+                    </div>
+
+                    <!-- Student Messages -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-envelope"></i> Student Messages</h2>
+                        </div>
+                        <div id="adminMessagesList">
+                            <p class="text-center">No messages yet.</p>
+                        </div>
+                        <form id="adminReplyForm" style="margin-top:16px;display:none;">
+                            <div class="form-group">
+                                <label for="adminReplyTo">To (Student Username)</label>
+                                <input type="text" id="adminReplyTo" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="adminReplyText">Message</label>
+                                <textarea id="adminReplyText" rows="2" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Reply</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeAdminReplyForm()">Cancel</button>
+                        </form>
+                    </div>
+
+                    <!-- Message Teacher -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-chalkboard-teacher"></i> Message Teacher</h2>
+                        </div>
+                        <div id="adminTeacherMessagesList">
+                            <p class="text-center">No messages yet.</p>
+                        </div>
+                        <form id="adminTeacherMessageForm" style="margin-top:16px;">
+                            <div class="form-group">
+                                <label for="adminTeacherMessageTo">To (Teacher Username or 'all-teachers')</label>
+                                <input type="text" id="adminTeacherMessageTo" required placeholder="e.g. nathan.g or all-teachers">
+                            </div>
+                            <div class="form-group">
+                                <label for="adminTeacherMessageText">Message</label>
+                                <textarea id="adminTeacherMessageText" rows="2" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Message</button>
+                        </form>
+                        <form id="adminTeacherReplyForm" style="margin-top:16px;display:none;">
+                            <div class="form-group">
+                                <label for="adminTeacherReplyTo">To (Teacher Username)</label>
+                                <input type="text" id="adminTeacherReplyTo" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="adminTeacherReplyText">Message</label>
+                                <textarea id="adminTeacherReplyText" rows="2" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Reply</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeAdminTeacherReplyForm()">Cancel</button>
+                        </form>
+                    </div>
+
+                    <!-- Messaging Section -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-envelope"></i> Messages <span id="adminMsgBadge" class="msg-badge" style="display:none;">0</span></h2>
+                        </div>
+                        <form id="adminMsgForm" style="margin-bottom:12px;">
+                            <div class="form-row">
+                                <input type="text" id="adminMsgTo" placeholder="To (username, all, all-teachers, all-students)" required style="flex:2;">
+                                <input type="text" id="adminMsgText" placeholder="Message" required style="flex:4;">
+                                <button type="submit" class="btn btn-primary">Send</button>
+                            </div>
+                        </form>
+                        <div id="adminMsgList" class="msg-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>User</th>
+                                <th>Details</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityTable">
+                            <tr>
+                                <td colspan="4" class="text-center">No recent activity</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Activity Log Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> Activity Log</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityLogTable">
+                            <!-- Log entries will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Bulk Import/Export Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-import"></i> Bulk Import/Export</h2>
+                </div>
+                <form id="bulkImportForm" style="margin-bottom:12px;">
+                    <input type="file" id="bulkImportFile" accept=".csv,.json">
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </form>
+                <div class="bulk-export-btns">
+                    <button class="btn btn-secondary" onclick="exportDataType('students')">Export Students (CSV)</button>
+                    <button class="btn btn-secondary" onclick="exportDataType('teachers')">Export Teachers (CSV)</button>
+                    <button class="btn btn-secondary" onclick="exportDataType('marks')">Export Marks (CSV)</button>
+                    <button class="btn btn-secondary" onclick="exportDataType('attendance')">Export Attendance (CSV)</button>
+                    <button class="btn btn-secondary" onclick="exportDataType('assignments')">Export Assignments (CSV)</button>
+                </div>
+            </div>
+
+            <!-- Calendar Section -->
+            <section>
+                <h2>Calendar</h2>
+                <div id="admin-calendar" style="max-width:420px;margin:auto;"></div>
+            </section>
+
+            <!-- Achievements Section -->
+            <section>
+                <h2>My Achievements</h2>
+                <div id="admin-gamification" style="max-width:420px;margin:auto;"></div>
+            </section>
+
+            <!-- Resources Section -->
+            <section>
+                <h2>Resources</h2>
+                <form id="resourceUploadForm" style="display:flex;flex-wrap:wrap;gap:0.5em;align-items:center;margin-bottom:1em;">
+                    <input type="text" id="resourceTitle" placeholder="Title" required style="flex:2;min-width:120px;padding:0.4em;">
+                    <input type="text" id="resourceSubject" placeholder="Subject (optional)" style="flex:1;min-width:90px;padding:0.4em;">
+                    <input type="file" id="resourceFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.zip,.rar" required style="flex:2;min-width:120px;">
+                    <button type="submit" class="btn btn-primary" style="padding:0.4em 1.2em;">Upload</button>
+                </form>
+                <div id="resourceList"></div>
+            </section>
+
+            <!-- AI Insights Section -->
+            <section>
+                <h2><i class="fas fa-robot"></i> AI Insights</h2>
+                <div id="aiInsights" style="max-width:420px;margin:auto;"></div>
+            </section>
+
+            <!-- Student 2FA Status Section -->
+            <section>
+                <h2><i class="fas fa-shield-alt"></i> Student 2FA Status</h2>
+                <div id="student2faStatusTable" style="max-width:520px;margin:auto;"></div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Add Mark Modal -->
+    <div id="addMarkModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/International_School_logo.png" alt="School Logo">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Add New Mark</h3>
+                <span class="close" onclick="closeModal('addMarkModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addMarkForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addStudent">Student</label>
+                            <select id="addStudent" required>
+                                <option value="">Select Student</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="addSubject">Subject</label>
+                            <select id="addSubject" required>
+                                <option value="">Select Subject</option>
+                                <option value="Maths">Maths</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Agriculture">Agriculture</option>
+                                <option value="English">English</option>
+                                <option value="Physics">Physics</option>
+                                <option value="ICT">ICT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="addTerm">Term</label>
+                            <select id="addTerm" required>
+                                <option value="">Select Term</option>
+                                <option value="1">Term 1</option>
+                                <option value="2">Term 2</option>
+                                <option value="3">Term 3</option>
+                                <option value="4">Term 4</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addActivity">Activity (Max: 5 marks)</label>
+                            <input type="number" id="addActivity" min="0" max="5" step="0.01" oninput="calculateTotalPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label for="addExerciseBook">Exercise Book (Max: 5 marks)</label>
+                            <input type="number" id="addExerciseBook" min="0" max="5" step="0.01" oninput="calculateTotalPreview()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addMidExam">Mid Exam (Max: 25 marks)</label>
+                            <input type="number" id="addMidExam" min="0" max="25" step="0.01" oninput="calculateTotalPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label for="addFinalExam">Final Exam (Max: 50 marks)</label>
+                            <input type="number" id="addFinalExam" min="0" max="50" step="0.01" oninput="calculateTotalPreview()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addGroupWork">Group Work (Max: 10 marks)</label>
+                            <input type="number" id="addGroupWork" min="0" max="10" step="0.01" oninput="calculateTotalPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label for="addWorksheet">Worksheet (Max: 5 marks)</label>
+                            <input type="number" id="addWorksheet" min="0" max="5" step="0.01" oninput="calculateTotalPreview()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="addComment">Comment (visible to student and teacher)</label>
+                        <textarea id="addComment" name="addComment" rows="2" style="resize:vertical;width:100%;font-size:1.04rem;padding:10px 8px;border-radius:8px;border:2px solid #e1e5e9;"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Total: <span id="totalPreview">0</span></label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('addMarkModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveMark()" class="btn btn-primary">Save Mark</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Notification Modal -->
+    <div id="addNotificationModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Bell_font_awesome.svg" alt="Notification Bell" style="background:#fff;">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-bell"></i> Add Notification</h3>
+                <span class="close" onclick="closeModal('addNotificationModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addNotificationForm">
+                    <div class="form-group">
+                        <label for="notificationTitle">Title</label>
+                        <input type="text" id="notificationTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notificationContent">Content</label>
+                        <textarea id="notificationContent" rows="4" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('addNotificationModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveNotification()" class="btn btn-primary">Save Notification</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Modal -->
+    <div id="userManagementModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Font_Awesome_5_solid_users-cog.svg" alt="User Management">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-users-cog"></i> User Management</h3>
+                <span class="close" onclick="closeModal('userManagementModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="user-tabs">
+                    <button class="tab-btn active" onclick="showUserTab('students')">Students</button>
+                    <button class="tab-btn" onclick="showUserTab('teachers')">Teachers</button>
+                    <button class="tab-btn" onclick="showUserTab('add')">Add User</button>
+                    <button class="tab-btn" onclick="showUserTab('all')">View All Users</button>
+                </div>
+                
+                <div id="studentsTab" class="user-tab active">
+                    <div class="user-list" id="studentsList">
+                        <!-- Students will be loaded here -->
+                    </div>
+                </div>
+                
+                <div id="teachersTab" class="user-tab">
+                    <div class="user-list" id="teachersList">
+                        <!-- Teachers will be loaded here -->
+                    </div>
+                </div>
+                
+                <div id="addUserTab" class="user-tab">
+                    <div class="form-instructions">
+                        <h4>Add New User</h4>
+                        <p>Fill in the details below to add a new student or teacher to the system.</p>
+                    </div>
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="newUserName">Full Name *</label>
+                            <input type="text" id="newUserName" required placeholder="Enter full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserUsername">Username *</label>
+                            <input type="text" id="newUserUsername" required placeholder="Enter username (min 3 characters)">
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserPassword">Password *</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="password" id="newUserPassword" required placeholder="Enter password (min 4 characters)" style="flex: 1;">
+                                <button type="button" onclick="toggleNewUserPasswordVisibility()" class="btn btn-secondary" style="white-space: nowrap;">
+                                    <i class="fas fa-eye"></i> Show
+                                </button>
+                                <button type="button" onclick="generatePassword()" class="btn btn-secondary" style="white-space: nowrap;">
+                                    <i class="fas fa-key"></i> Generate
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserRole">Role *</label>
+                            <select id="newUserRole" required onchange="handleRoleSelection()">
+                                <option value="">Select Role</option>
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="teacherSubjectGroup" style="display: none;">
+                            <label for="newUserSubject">Assigned Subject *</label>
+                            <select id="newUserSubject">
+                                <option value="">Select Subject</option>
+                                <option value="Maths">Maths</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Agriculture">Agriculture</option>
+                                <option value="English">English</option>
+                                <option value="Physics">Physics</option>
+                                <option value="ICT">ICT</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                
+                <div id="allUsersTab" class="user-tab">
+                    <div class="form-instructions">
+                        <h4>All Users & Credentials</h4>
+                        <p>Below is a complete list of all users in the system with their login credentials.</p>
+                    </div>
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Username</th>
+                                    <th>Password</th>
+                                    <th>Role</th>
+                                    <th>Subject (Teachers)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allUsersTableBody">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('userManagementModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveNewUser()" class="btn btn-primary">Add User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Import Modal -->
+    <div id="bulkImportModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/International_School_logo.png" alt="Logo">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-upload"></i> Bulk Import</h3>
+                <span class="close" onclick="closeModal('bulkImportModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Upload a CSV or JSON file to import students, teachers, or marks.</p>
+                <input type="file" id="bulkImportFile" accept=".csv,.json">
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('bulkImportModal')" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Stats Modal -->
+    <div id="systemStatsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/International_School_logo.png" alt="Logo">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-pie"></i> System Stats</h3>
+                <span class="close" onclick="closeModal('systemStatsModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>View system statistics and analytics.</p>
+                <canvas id="systemStatsChart" width="300" height="150"></canvas>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('systemStatsModal')" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Images Modal -->
+    <div id="studentImagesModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/International_School_logo.png" alt="Logo">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-user-circle"></i> Student Images</h3>
+                <span class="close" onclick="closeModal('studentImagesModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Upload and manage student profile images.</p>
+                <select id="studentImageSelect" style="margin-bottom:10px;"></select>
+                <input type="file" id="studentImageUpload" accept="image/*">
+                <div id="studentImagePreview" style="margin-top:10px;"></div>
+                <button id="saveStudentImageBtn" class="btn btn-primary" style="margin-top:10px;">Save Image</button>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('studentImagesModal')" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deadlines Modal -->
+    <div id="deadlinesModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/International_School_logo.png" alt="Logo">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-clock"></i> Deadlines</h3>
+                <span class="close" onclick="closeModal('deadlinesModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Add and view assignment or exam deadlines.</p>
+                <form id="addDeadlineForm">
+                    <input type="text" id="deadlineTitle" placeholder="Title" required>
+                    <input type="date" id="deadlineDate" required>
+                    <button type="submit" class="btn btn-primary">Add Deadline</button>
+                </form>
+                <ul id="deadlinesList" style="margin-top:10px;"></ul>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('deadlinesModal')" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Demo Data Modal -->
+    <div id="resetDemoDataModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/International_School_logo.png" alt="Logo">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-redo"></i> Reset Demo Data</h3>
+                <span class="close" onclick="closeModal('resetDemoDataModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset all demo data? This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('resetDemoDataModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="confirmResetDemoData()" class="btn btn-danger">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Demo Data Modal -->
+    <div id="loadDemoDataModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/International_School_logo.png" alt="Logo">
+            </div>
+            <div class="modal-header">
+                <h3><i class="fas fa-download"></i> Load Demo Data</h3>
+                <span class="close" onclick="closeModal('loadDemoDataModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to load demo data? This will overwrite current data.</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('loadDemoDataModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="confirmLoadDemoData()" class="btn btn-primary">Load</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Badge Details -->
+    <div id="badgeModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:10000;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:320px;text-align:center;position:relative;">
+            <button onclick="document.getElementById('badgeModal').style.display='none'" style="position:absolute;top:0.5em;right:0.7em;background:none;border:none;font-size:1.3em;">&times;</button>
+            <div id="badgeModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                <span class="close" onclick="closeModal('editProfileModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label for="editProfileName">Full Name</label>
+                        <input type="text" id="editProfileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProfileEmail">Email</label>
+                        <input type="email" id="editProfileEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Two-Factor Authentication (2FA)</label>
+                        <div style="display:flex;align-items:center;gap:0.7em;">
+                            <input type="checkbox" id="enable2FA">
+                            <span id="2faStatus" style="font-size:0.95em;color:#666;"></span>
+                        </div>
+                        <div id="2faSetup" style="display:none;margin-top:0.5em;background:#f5f6fa;padding:0.7em 1em;border-radius:8px;">
+                            <div><b>Setup Code:</b> <span id="2faCode" style="font-family:monospace;font-size:1.1em;"></span></div>
+                            <div style="font-size:0.95em;color:#888;">Enter this code when logging in.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('editProfileModal')" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveProfile()" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="utility-bar">
+        <button onclick="location.reload()" class="btn btn-secondary" title="Refresh" aria-label="Refresh Dashboard"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <button onclick="toggleTheme()" class="btn btn-secondary" id="themeBtn2" title="Toggle Dark Mode" aria-label="Toggle Dark Mode"><i class="fas fa-moon"></i> Dark Mode</button>
+        <button onclick="logout()" class="btn btn-danger" title="Logout" aria-label="Logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <button onclick="openHelpModal()" class="btn btn-secondary" aria-label="Help & Support" title="Help & Support"><i class="fas fa-question-circle"></i></button>
+        <button onclick="showAllCards()" class="btn btn-secondary" aria-label="Show All Cards">Show All Cards</button>
+        <button onclick="openThemeModal()" class="btn btn-secondary" aria-label="Theme & Branding">Theme</button>
+        <button onclick="startTour()" class="btn btn-secondary" aria-label="Start Tour">Start Tour</button>
+        <span style="margin-left:16px;font-size:0.95em;">API Key: <span id="apiKeyDisplay"></span></span>
+        <button onclick="fetchMarksAPI()" class="btn btn-secondary" aria-label="Fetch Marks API">Fetch API Demo</button>
+    </div>
+
+    <div id="helpModal" class="modal hidden" aria-modal="true" role="dialog" tabindex="-1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Help & Support</h3>
+                <span class="close" onclick="closeHelpModal()" aria-label="Close Help">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4>Frequently Asked Questions</h4>
+                <ul>
+                    <li><b>How do I manage users?</b> Use the Users section to add, edit, or remove users.</li>
+                    <li><b>How do I import/export data?</b> Use the Import/Export section in the navbar.</li>
+                    <li><b>How do I enable dark mode?</b> Click the Dark Mode button in the top bar.</li>
+                </ul>
+                <h4>Contact Support</h4>
+                <p>Email: <a href="mailto:support@internationalschool.com">support@internationalschool.com</a></p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeHelpModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="themeModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Theme & Branding</h3>
+                <span class="close" onclick="closeThemeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <label>Primary Color: <input type="color" id="primaryColorPicker"></label>
+                <label>Logo: <input type="file" id="logoUpload" accept="image/*"></label>
+                <img id="customLogoPreview" style="max-width:100px;display:none;">
+            </div>
+            <div class="modal-footer">
+                <button onclick="saveThemeSettings()" class="btn btn-primary">Save</button>
+                <button onclick="closeThemeModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+    function toggleHamburgerMenu() {
+        var menu = document.getElementById('sideMenu');
+        menu.classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+        var menu = document.getElementById('sideMenu');
+        var hamburger = document.querySelector('.hamburger');
+        if (menu.classList.contains('open') && !menu.contains(e.target) && !hamburger.contains(e.target)) {
+            menu.classList.remove('open');
+        }
+    });
+
+    // Sample events: school-wide deadlines and reports
+    const adminEvents = [
+        { date: '2024-06-10', title: 'Math Assignment Due', description: 'All classes' },
+        { date: '2024-06-12', title: 'Attendance Report', description: 'Review attendance for all classes' },
+        { date: '2024-06-15', title: 'Science Project Due', description: 'All classes' },
+        { date: '2024-06-18', title: 'Staff Meeting', description: 'Monthly staff meeting' },
+    ];
+    window.initCalendar('#admin-calendar', adminEvents);
+
+    // --- Real Gamification & Leaderboard Logic for Admins ---
+    const admins = JSON.parse(localStorage.getItem('admins')) || [];
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const auditLogs = JSON.parse(localStorage.getItem('auditLogs')) || [];
+    const messages = JSON.parse(localStorage.getItem('messages')) || [];
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    function calcAdminPoints(admin) {
+        let points = 0;
+        // Users managed: +2 for each user created
+        points += (users.filter(u => u.createdBy === admin.username).length) * 2;
+        // Data imports/exports: +1 for each
+        points += (auditLogs.filter(l => l.action === 'import' || l.action === 'export' && l.user === admin.username).length);
+        // Audit logs reviewed: +1 for each reviewed
+        points += (auditLogs.filter(l => l.action === 'review' && l.user === admin.username).length);
+        // Messages: +1 for each message sent
+        points += messages.filter(m => m.from === admin.username).length;
+        return points;
+    }
+
+    function getAdminBadges(admin) {
+        const badges = [];
+        // Data Guardian (5+ imports/exports)
+        const dataOps = auditLogs.filter(l => (l.action === 'import' || l.action === 'export') && l.user === admin.username);
+        if (dataOps.length >= 5) {
+            badges.push({ name: 'Data Guardian', icon: '🛡️', description: 'Handled 5+ data imports/exports.' });
+        }
+        // Audit Champion (10+ reviews)
+        const reviews = auditLogs.filter(l => l.action === 'review' && l.user === admin.username);
+        if (reviews.length >= 10) {
+            badges.push({ name: 'Audit Champion', icon: '🔍', description: 'Reviewed 10+ audit logs.' });
+        }
+        // User Manager (10+ users created)
+        const userCreations = users.filter(u => u.createdBy === admin.username);
+        if (userCreations.length >= 10) {
+            badges.push({ name: 'User Manager', icon: '👥', description: 'Created 10+ users.' });
+        }
+        // Communicator (sent 10+ messages)
+        const adminMessages = messages.filter(m => m.from === admin.username);
+        if (adminMessages.length >= 10) {
+            badges.push({ name: 'Communicator', icon: '💬', description: 'Sent 10+ messages.' });
+        }
+        return badges;
+    }
+
+    const adminGamification = admins.map(a => ({
+        ...a,
+        points: calcAdminPoints(a),
+        badges: getAdminBadges(a)
+    }));
+    const leaderboard = [...adminGamification].sort((a, b) => b.points - a.points);
+    const me = adminGamification.find(a => a.username === currentUser.username);
+
+    // Render achievements
+    const gamificationDiv = document.getElementById('admin-gamification');
+    if (me) {
+        gamificationDiv.innerHTML = `
+            <div style="font-size:1.2em;margin-bottom:0.5em;">Points: <strong>${me.points}</strong></div>
+            <div style="display:flex;gap:1em;flex-wrap:wrap;justify-content:center;">
+                ${me.badges.length ? me.badges.map((badge, i) => `
+                    <div style='display:flex;flex-direction:column;align-items:center;background:#f5f6fa;border-radius:8px;padding:0.7em 1em;box-shadow:0 1px 4px #e6e7fa;cursor:pointer;' onclick='showBadgeModal(${JSON.stringify(badge)})'>
+                        <span style='font-size:2em;'>${badge.icon}</span>
+                        <span style='font-weight:bold;margin-top:0.3em;'>${badge.name}</span>
+                    </div>
+                `).join('') : '<span style="color:#888;">No badges yet.</span>'}
+            </div>
+        `;
+    }
+    // Render leaderboard
+    const leaderboardDiv = document.createElement('div');
+    leaderboardDiv.id = 'admin-leaderboard';
+    leaderboardDiv.style.maxWidth = '420px';
+    leaderboardDiv.style.margin = 'auto';
+    leaderboardDiv.innerHTML = `
+        <h2>Leaderboard</h2>
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;box-shadow:0 1px 4px #e6e7fa;">
+            <thead>
+                <tr style="background:#f5f6fa;color:#4e54c8;font-weight:bold;">
+                    <td style="padding:0.5em 0.3em;">Rank</td>
+                    <td style="padding:0.5em 0.3em;">Name</td>
+                    <td style="padding:0.5em 0.3em;text-align:right;">Points</td>
+                </tr>
+            </thead>
+            <tbody>
+                ${leaderboard.slice(0, 5).map((entry, i) => `
+                    <tr style='background:${entry.username===currentUser.username?"#e6e7fa":"#fafbff"};font-weight:${entry.username===currentUser.username?"bold":"normal"};'>
+                        <td style="padding:0.4em 0.3em;">${i+1}</td>
+                        <td style="padding:0.4em 0.3em;">${entry.name}</td>
+                        <td style="padding:0.4em 0.3em;text-align:right;">${entry.points}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    const achSection = document.getElementById('admin-gamification');
+    achSection.parentNode.insertBefore(leaderboardDiv, achSection.nextSibling);
+    // Badge modal logic
+    window.showBadgeModal = function(badge) {
+        const modal = document.getElementById('badgeModal');
+        const content = document.getElementById('badgeModalContent');
+        content.innerHTML = `<div style='font-size:2.5em;'>${badge.icon}</div><div style='font-weight:bold;font-size:1.1em;margin:0.5em 0;'>${badge.name}</div><div style='color:#555;'>${badge.description}</div>`;
+        modal.style.display = 'flex';
+    };
+
+    // --- Multi-language Support ---
+    const translations = {
+        en: {
+            'Calendar': 'Calendar',
+            'My Achievements': 'My Achievements',
+            'Leaderboard': 'Leaderboard',
+            'Points': 'Points',
+            'No badges yet.': 'No badges yet.',
+            'Rank': 'Rank',
+            'Name': 'Name',
+            'Language:': 'Language:',
+        },
+        am: {
+            'Calendar': '\u12a0\u1295\u12f0\u1308',
+            'My Achievements': '\u12e8\u1265\u12f0\u120b\u12ca\u1275 \u12a0\u12ed\u121d\u12ad\u12cb\u12ca',
+            'Leaderboard': '\u12a0\u12ed\u121d\u12ad\u12cb\u12ca \u12a0\u12ed\u121d\u12ad\u12cb\u12ca',
+            'Points': '\u12a0\u12ed\u121d\u12ad\u12cb\u12ca',
+            'No badges yet.': '\u1218\u1208\u12a0\u12ed\u121d\u12ad\u12cb\u12ca \u12a0\u12ed\u121d\u12ad\u12cb\u12ca',
+            'Rank': '\u12a0\u12ed\u121d\u12ad\u12cb\u12ca',
+            'Name': '\u1218\u1208',
+            'Language:': '\u1235\u12a8\u1295\u12f0',
+        }
+    };
+    function setLanguage(lang) {
+        localStorage.setItem('lang', lang);
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[lang][key]) {
+                el.textContent = translations[lang][key];
+            }
+        });
+        document.querySelectorAll('.i18n-table').forEach(table => {
+            table.querySelectorAll('th,td').forEach(cell => {
+                const key = cell.getAttribute('data-i18n');
+                if (key && translations[lang][key]) cell.textContent = translations[lang][key];
+            });
+        });
+        // Update language label
+        const langLabel = document.getElementById('langLabel');
+        if (langLabel && translations[lang]['Language:']) {
+            langLabel.innerHTML = `<b>${translations[lang]['Language:']}</b>`;
+        }
+    }
+    const langSelect = document.getElementById('langSelect');
+    const savedLang = localStorage.getItem('lang') || 'en';
+    langSelect.value = savedLang;
+    langSelect.onchange = e => setLanguage(e.target.value);
+    setLanguage(savedLang);
+    function markI18n() {
+        document.querySelectorAll('section > h2').forEach(h2 => {
+            const txt = h2.textContent.trim();
+            if (translations.en[txt]) h2.setAttribute('data-i18n', txt);
+        });
+        document.querySelectorAll('table thead tr td').forEach(td => {
+            const txt = td.textContent.trim();
+            if (translations.en[txt]) td.setAttribute('data-i18n', txt);
+        });
+        document.querySelectorAll('label[for="langSelect"]').forEach(label => {
+            label.setAttribute('data-i18n', 'Language:');
+        });
+    }
+    markI18n();
+
+    // --- Resource Sharing Logic ---
+    const RESOURCE_KEY = 'resources';
+    function getResources() {
+        return JSON.parse(localStorage.getItem(RESOURCE_KEY)) || [];
+    }
+    function saveResources(resources) {
+        localStorage.setItem(RESOURCE_KEY, JSON.stringify(resources));
+    }
+    function renderResourceList() {
+        const list = document.getElementById('resourceList');
+        const resources = getResources().filter(r => r.uploader === currentUser.username);
+        if (!resources.length) {
+            list.innerHTML = '<p style="color:#888;text-align:center;">No resources uploaded yet.</p>';
+            return;
+        }
+        list.innerHTML = resources.map(r => `
+            <div style='display:flex;align-items:center;gap:1em;background:#f5f6fa;border-radius:8px;padding:0.7em 1em;margin-bottom:0.5em;'>
+                <span style='font-size:1.5em;'>${getFileIcon(r.fileName)}</span>
+                <div style='flex:2;'>
+                    <div style='font-weight:bold;'>${r.title}</div>
+                    <div style='font-size:0.95em;color:#666;'>${r.subject ? r.subject : 'General'} &middot; ${formatDate(r.uploadedAt)}</div>
+                </div>
+                <a href='${r.fileData}' download='${r.fileName}' class='btn btn-sm' style='padding:0.3em 0.8em;'>Download</a>
+            </div>
+        `).join('');
+    }
+    function getFileIcon(fileName) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (["pdf"].includes(ext)) return '📄';
+        if (["doc","docx"].includes(ext)) return '📝';
+        if (["jpg","jpeg","png"].includes(ext)) return '🖼️';
+        if (["zip","rar"].includes(ext)) return '🗜️';
+        if (["txt"].includes(ext)) return '';
+        return '📁';
+    }
+    const resourceForm = document.getElementById('resourceUploadForm');
+    if (resourceForm) {
+        resourceForm.onsubmit = async function(e) {
+            e.preventDefault();
+            const title = document.getElementById('resourceTitle').value.trim();
+            const subject = document.getElementById('resourceSubject').value.trim();
+            const fileInput = document.getElementById('resourceFile');
+            if (!title || !fileInput.files.length) return;
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const resources = getResources();
+                resources.unshift({
+                    id: generateId(),
+                    title,
+                    subject,
+                    fileName: file.name,
+                    fileData: evt.target.result,
+                    uploader: currentUser.username,
+                    uploadedAt: new Date().toISOString()
+                });
+                saveResources(resources);
+                renderResourceList();
+                resourceForm.reset();
+                showNotification('Resource uploaded!', 'success');
+            };
+            reader.readAsDataURL(file);
+        };
+    }
+    renderResourceList();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        window.setupResourceUpload(currentUser, true);
+        window.renderResourceList(currentUser, true, false);
+        // AI Insights logic for admins
+        const aiDiv = document.getElementById('aiInsights');
+        if (aiDiv && currentUser && currentUser.role === 'admin') {
+            // Gather data
+            const allMarks = JSON.parse(localStorage.getItem('marks')) || [];
+            const allAttendance = JSON.parse(localStorage.getItem('attendance')) || [];
+            const allAssignments = JSON.parse(localStorage.getItem('assignments')) || [];
+            // Insights
+            let insights = [];
+            // School average
+            if (allMarks.length) {
+                const avg = allMarks.reduce((a, b) => a + (b.total || 0), 0) / allMarks.length;
+                insights.push({ icon: '📊', text: `School average: <b>${avg.toFixed(1)}%</b>.` });
+                // Top performer
+                const byStudent = {};
+                allMarks.forEach(m => {
+                    if (!byStudent[m.studentName]) byStudent[m.studentName] = [];
+                    byStudent[m.studentName].push(m.total);
+                });
+                let top = '', topAvg = -1;
+                for (const s in byStudent) {
+                    const avgS = byStudent[s].reduce((a, b) => a + b, 0) / byStudent[s].length;
+                    if (avgS > topAvg) { topAvg = avgS; top = s; }
+                }
+                if (top) insights.push({ icon: '🏆', text: `Top performer: <b>${top}</b> (${topAvg.toFixed(1)}%).` });
+                // At-risk students
+                const atRisk = Object.entries(byStudent).filter(([s, arr]) => (arr.reduce((a, b) => a + b, 0) / arr.length) < 60).map(([s]) => s);
+                if (atRisk.length) insights.push({ icon: '⚠️', text: `At-risk students: <b>${atRisk.join(', ')}</b>.` });
+            } else {
+                insights.push({ icon: 'ℹ️', text: 'No marks data yet. Add marks to see insights.' });
+            }
+            // Attendance
+            if (allAttendance.length) {
+                const byStudent = {};
+                allAttendance.forEach(a => {
+                    if (!byStudent[a.studentId]) byStudent[a.studentId] = [];
+                    byStudent[a.studentId].push(a.status);
+                });
+                const lowAttendance = Object.entries(byStudent).filter(([id, arr]) => (arr.filter(s => s === 'Present').length / arr.length) < 0.7).map(([id]) => id);
+                if (lowAttendance.length) insights.push({ icon: '🕒', text: `Students with low attendance: <b>${lowAttendance.join(', ')}</b>.` });
+            }
+            // Assignment completion
+            if (allAssignments.length) {
+                insights.push({ icon: '📚', text: `There are <b>${allAssignments.length}</b> assignments created school-wide.` });
+            }
+            // Render
+            aiDiv.innerHTML = insights.map(i => `<div style='display:flex;align-items:center;gap:0.7em;background:#f5f6fa;border-radius:8px;padding:0.7em 1em;margin-bottom:0.5em;'><span style='font-size:1.5em;'>${i.icon}</span><span style='font-size:1em;'>${i.text}</span></div>`).join('');
+        }
+        // Student 2FA Status Table
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        const tableDiv = document.getElementById('student2faStatusTable');
+        if (tableDiv) {
+            let html = `<table style='width:100%;border-collapse:collapse;background:#fff;border-radius:8px;box-shadow:0 1px 4px #e6e7fa;'>
+                <thead><tr style='background:#f5f6fa;color:#4e54c8;font-weight:bold;'><td>Name</td><td>Username</td><td>Password</td><td>2FA Status</td><td>2FA Code</td></tr></thead><tbody>`;
+            students.forEach(s => {
+                const twoFA = JSON.parse(localStorage.getItem('2fa_' + s.id) || '{}');
+                html += `<tr><td style='padding:0.4em 0.3em;'>${s.name || s.fullName || s.id}</td><td style='padding:0.4em 0.3em;'>${s.id}</td><td style='padding:0.4em 0.3em;'>${s.password || ''}</td><td style='padding:0.4em 0.3em;'>${twoFA.enabled ? '<span style=\"color:#4CAF50;font-weight:bold;\">Enabled</span>' : '<span style=\"color:#c00;\">Disabled</span>'}</td><td style='padding:0.4em 0.3em;'>${twoFA.enabled ? twoFA.code : ''}</td></tr>`;
+            });
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+        }
+    });
+
+    // 2FA logic for Edit Profile Modal
+    function generate2FACode() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+    function update2FAUI() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const enable2FA = document.getElementById('enable2FA');
+        const status = document.getElementById('2faStatus');
+        const setup = document.getElementById('2faSetup');
+        const codeSpan = document.getElementById('2faCode');
+        let user2FA = JSON.parse(localStorage.getItem('2fa_' + currentUser.username) || '{}');
+        enable2FA.checked = !!user2FA.enabled;
+        status.textContent = user2FA.enabled ? 'Enabled' : 'Disabled';
+        if (user2FA.enabled) {
+            setup.style.display = 'block';
+            codeSpan.textContent = user2FA.code || '';
+        } else {
+            setup.style.display = 'none';
+            codeSpan.textContent = '';
+        }
+    }
+    document.getElementById('editProfileModal').addEventListener('show', update2FAUI);
+    document.getElementById('enable2FA').onchange = function() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        let user2FA = JSON.parse(localStorage.getItem('2fa_' + currentUser.username) || '{}');
+        if (this.checked) {
+            user2FA = { enabled: true, code: generate2FACode() };
+        } else {
+            user2FA = { enabled: false };
+        }
+        localStorage.setItem('2fa_' + currentUser.username, JSON.stringify(user2FA));
+        update2FAUI();
+    };
+    // Show modal event polyfill
+    (function() {
+        const modal = document.getElementById('editProfileModal');
+        if (!modal) return;
+        if (!modal._showEventPatched) {
+            modal._showEventPatched = true;
+            const origShow = modal.classList.remove;
+            modal.classList.remove = function(...args) {
+                const wasHidden = modal.classList.contains('hidden');
+                origShow.apply(this, args);
+                if (wasHidden && !modal.classList.contains('hidden')) {
+                    const event = new Event('show');
+                    modal.dispatchEvent(event);
+                }
+            };
+        }
+    })();
+    </script>
+</body>
+</html> 

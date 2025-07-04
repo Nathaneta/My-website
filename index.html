@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bright Grade Mark Management System</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="floating-shape shape1"></div>
+    <div class="floating-shape shape2"></div>
+    <div class="floating-shape shape3"></div>
+    <div class="login-container">
+        <div class="login-card" style="box-shadow: 0 8px 32px rgba(44,62,80,0.18); border-radius: 24px;">
+            <div class="login-header" style="background: linear-gradient(135deg, #667eea 0%, #38d996 100%); border-radius: 24px 24px 0 0;">
+                <div class="logo" style="margin-bottom: 10px;">
+                    <img src="https://img.icons8.com/ios-filled/100/4CAF50/graduation-cap.png" alt="Logo" style="width:54px;height:54px;margin-bottom:8px;">
+                    <h1 style="font-size:2rem;letter-spacing:1px;">Bright Grade Portal</h1>
+                </div>
+                <p style="font-size:1.1rem;opacity:0.95;">Bright Grade Mark Management System</p>
+                <p class="academic-year" style="font-size:0.95rem;">Academic Year 2024-2025</p>
+            </div>
+            
+            <form id="loginForm" class="login-form" style="padding: 36px 28px 24px 28px;">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i>
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <div class="password-input">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn" style="margin-top:18px;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+                
+                <div class="error-message" id="error-message"></div>
+                <div class="success-message" id="success-message"></div>
+            </form>
+            
+            <div class="login-footer" style="background:transparent;border:none;text-align:center;padding:18px 0 8px 0;">
+                <span style="font-size:0.95rem;color:#888;">&copy; 2025 International School. All rights reserved.</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('service-worker.js');
+        });
+      }
+    </script>
+</body>
+</html> 
