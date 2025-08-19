@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="description" content="Nexora - Transform Your Business with AI-Powered Solutions" />
+    <meta name="keywords" content="AI, artificial intelligence, business solutions, automation, machine learning" />
+    <meta name="author" content="Nexora" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nexora.com/" />
+    <meta property="og:title" content="Nexora - AI-Powered Business Solutions" />
+    <meta property="og:description" content="Transform your business with cutting-edge AI technologies. Unlock unprecedented growth and efficiency." />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://nexora.com/" />
+    <meta property="twitter:title" content="Nexora - AI-Powered Business Solutions" />
+    <meta property="twitter:description" content="Transform your business with cutting-edge AI technologies. Unlock unprecedented growth and efficiency." />
+    <meta property="twitter:image" content="%PUBLIC_URL%/og-image.jpg" />
+    
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" as="style">
+    
+    <title>Nexora - AI-Powered Business Solutions</title>
+    
+    <!-- Inline critical CSS for better performance -->
+    <style>
+      /* Critical CSS for initial render */
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* Loading spinner */
+      .initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #3b82f6, #06b6d4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      .loader-content {
+        text-align: center;
+        color: white;
+      }
+      
+      .loader-logo {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        animation: pulse 2s infinite;
+      }
+      
+      .loader-text {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      
+      .loader-subtitle {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+      
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 16px auto 0;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+      
+      /* Hide loader when app is ready */
+      .app-ready .initial-loader {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease-out;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>You need to enable JavaScript to run this application.</p>
+        <p>Please enable JavaScript in your browser settings and refresh the page.</p>
+      </div>
+    </noscript>
+    
+    <!-- Initial loading screen -->
+    <div class="initial-loader">
+      <div class="loader-content">
+        <div class="loader-logo">
+          <span style="font-size: 32px; font-weight: bold;">N</span>
+        </div>
+        <div class="loader-text">Nexora</div>
+        <div class="loader-subtitle">Loading your AI-powered experience...</div>
+        <div class="spinner"></div>
+      </div>
+    </div>
+    
+    <!-- React app root -->
+    <div id="root"></div>
+    
+    <!-- Remove initial loader when React app loads -->
+    <script>
+      // Remove loader when React app is ready
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          document.body.classList.add('app-ready');
+          setTimeout(function() {
+            const loader = document.querySelector('.initial-loader');
+            if (loader) {
+              loader.remove();
+            }
+          }, 500);
+        }, 1000);
+      });
+      
+      // Fallback to remove loader after 5 seconds
+      setTimeout(function() {
+        document.body.classList.add('app-ready');
+        setTimeout(function() {
+          const loader = document.querySelector('.initial-loader');
+          if (loader) {
+            loader.remove();
+          }
+        }, 500);
+      }, 5000);
+    </script>
+  </body>
+</html>
